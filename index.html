@@ -1,293 +1,322 @@
-#include <stdio.h>
-#include <stdlib.h>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>💸 Expense Tracker</title>
 
-// ================= STRING MODULE =================
-int str_compare(const char *a, const char *b) {
-    while (*a && *b) {
-        if (*a != *b) return *a - *b;
-        a++; b++;
-    }
-    return *a - *b;
-}
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-// ================= STRUCTURE =================
-typedef struct {
-    int id;
-    char category[50];
-    float amount;
-    char date[15];
-} Expense;
-
-// ================= GLOBAL VARIABLES =================
-Expense *expenses = NULL;
-int count = 0;
-
-// ================= AUTH MODULE =================
-int login() {
-    char username[50], email[50], password[50];
-    int attempts = 3;
-
-    printf("\nYou have 3 login attempts.\n");
-
-    while (attempts > 0) {
-        printf("\n--- Login ---\n");
-
-        printf("Username: ");
-        scanf("%49s", username);
-
-        printf("Email: ");
-        scanf("%49s", email);
-
-        printf("Password: ");
-        scanf("%49s", password);
-
-        if (str_compare(username, "admin") == 0 &&
-            str_compare(email, "admin@email.com") == 0 &&
-            str_compare(password, "1234") == 0) {
-
-            printf("\nLogin Successful!\n");
-            return 1;
+    <style>
+        body {
+            font-family: Arial;
+            background: linear-gradient(135deg, #a8e063, #56ab2f);
+            margin: 0;
+            color: white;
         }
 
-        attempts--;
-        printf("Invalid Credentials! Attempts left: %d\n", attempts);
-    }
-
-    printf("\nToo many failed attempts. Exiting...\n");
-    return 0;
-}
-
-// ================= ADD EXPENSE =================
-void addExpense() {
-    Expense *temp = realloc(expenses, (count + 1) * sizeof(Expense));
-    if (temp == NULL) {
-        printf("Memory allocation failed!\n");
-        return;
-    }
-    expenses = temp;
-
-    expenses[count].id = count + 1;
-
-    printf("\nEnter Category: ");
-    scanf("%49s", expenses[count].category);
-
-    printf("Enter Amount: ");
-    scanf("%f", &expenses[count].amount);
-
-    if (expenses[count].amount < 0) {
-        printf("Invalid amount!\n");
-        return;
-    }
-
-    printf("Enter Date (DD/MM/YYYY): ");
-    scanf("%14s", expenses[count].date);
-
-    count++;
-    printf("Expense Added!\n");
-}
-
-// ================= VIEW EXPENSES =================
-void viewExpenses() {
-    if (count == 0) {
-        printf("\nNo records found.\n");
-        return;
-    }
-
-    printf("\n--- Expense List ---\n");
-    for (int i = 0; i < count; i++) {
-        printf("ID:%d | %s | %.2f | %s\n",
-               expenses[i].id,
-               expenses[i].category,
-               expenses[i].amount,
-               expenses[i].date);
-    }
-}
-
-// ================= UPDATE =================
-void updateExpense() {
-    int id;
-    viewExpenses();
-
-    printf("\nEnter expense ID to update: ");
-    scanf("%d", &id);
-
-    int index = -1;
-    for (int i = 0; i < count; i++) {
-        if (expenses[i].id == id) {
-            index = i;
-            break;
-        }
-    }
-
-    if (index == -1) {
-        printf("Invalid ID!\n");
-        return;
-    }
-
-    printf("New Category: ");
-    scanf("%49s", expenses[index].category);
-
-    printf("New Amount: ");
-    scanf("%f", &expenses[index].amount);
-
-    if (expenses[index].amount < 0) {
-        printf("Invalid amount!\n");
-        return;
-    }
-
-    printf("New Date: ");
-    scanf("%14s", expenses[index].date);
-
-    printf("Updated Successfully!\n");
-}
-
-// ================= DELETE =================
-void deleteExpense() {
-    int id;
-    viewExpenses();
-
-    printf("\nEnter expense ID to delete: ");
-    scanf("%d", &id);
-
-    int index = -1;
-    for (int i = 0; i < count; i++) {
-        if (expenses[i].id == id) {
-            index = i;
-            break;
-        }
-    }
-
-    if (index == -1) {
-        printf("Invalid ID!\n");
-        return;
-    }
-
-    for (int i = index; i < count - 1; i++) {
-        expenses[i] = expenses[i + 1];
-    }
-
-    count--;
-
-    if (count == 0) {
-        free(expenses);
-        expenses = NULL;
-    } else {
-        Expense *temp = realloc(expenses, count * sizeof(Expense));
-        if (temp != NULL) {
-            expenses = temp;
-        }
-    }
-
-    printf("Deleted Successfully!\n");
-}
-
-// ================= TOTAL =================
-void totalExpenses() {
-    float total = 0;
-
-    for (int i = 0; i < count; i++) {
-        total += expenses[i].amount;
-    }
-
-    printf("\nTotal Expense: %.2f\n", total);
-}
-
-// ================= CATEGORY TOTAL =================
-void categoryWiseTotal() {
-    char category[50];
-    float total = 0;
-
-    printf("\nEnter Category: ");
-    scanf("%49s", category);
-
-    for (int i = 0; i < count; i++) {
-        if (str_compare(expenses[i].category, category) == 0) {
-            total += expenses[i].amount;
-        }
-    }
-
-    printf("Total for %s: %.2f\n", category, total);
-}
-
-// ================= DAILY REPORT =================
-void dailyReport() {
-    char date[15];
-    float total = 0;
-    int found = 0;
-
-    printf("\nEnter Date (DD/MM/YYYY): ");
-    scanf("%14s", date);
-
-    printf("\n--- Daily Report (%s) ---\n", date);
-
-    for (int i = 0; i < count; i++) {
-        if (str_compare(expenses[i].date, date) == 0) {
-            printf("ID:%d | %s | %.2f\n",
-                   expenses[i].id,
-                   expenses[i].category,
-                   expenses[i].amount);
-
-            total += expenses[i].amount;
-            found = 1;
-        }
-    }
-
-    if (!found) {
-        printf("No expenses found for this date.\n");
-    } else {
-        printf("\nTotal for %s: %.2f\n", date, total);
-    }
-}
-
-// ================= MENU =================
-void menu() {
-    int choice;
-
-    printf("\n==============================\n");
-    printf("   WELCOME TO EXPENSE TRACKER\n");
-    printf("==============================\n");
-
-    do {
-        printf("\n==== Expense Manager ====\n");
-        printf("1. Add Expense\n");
-        printf("2. View Expenses\n");
-        printf("3. Update Expense\n");
-        printf("4. Delete Expense\n");
-        printf("5. Total Expenses\n");
-        printf("6. Category-wise Total\n");
-        printf("7. Daily Report\n");
-        printf("8. Exit\n");
-
-        printf("Enter choice: ");
-        if (scanf("%d", &choice) != 1) {
-            printf("Invalid input!\n");
-            while(getchar() != '\n');
-            continue;
+        .container {
+            width: 90%;
+            margin: auto;
+            padding: 20px;
         }
 
-        switch (choice) {
-            case 1: addExpense(); break;
-            case 2: viewExpenses(); break;
-            case 3: updateExpense(); break;
-            case 4: deleteExpense(); break;
-            case 5: totalExpenses(); break;
-            case 6: categoryWiseTotal(); break;
-            case 7: dailyReport(); break;
-            case 8: printf("Exiting...\n"); break;
-            default: printf("Invalid choice!\n");
+        .card {
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
         }
 
-    } while (choice != 8);
+        input, button {
+            padding: 10px;
+            margin: 5px;
+            border-radius: 8px;
+            border: none;
+        }
+
+        button {
+            background: #2e7d32;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1b5e20;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            color: black;
+        }
+
+        th {
+            background: #2e7d32;
+            color: white;
+        }
+
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+
+        .table-container {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        #dashboard {
+            display: none;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        canvas {
+            background: white;
+            border-radius: 10px;
+            padding: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- AUTH -->
+    <div id="auth" class="card">
+        <h2>💚 Login / Signup</h2>
+        <input id="user" placeholder="Username"><br>
+        <input id="email" placeholder="Email"><br>
+        <input id="pass" type="password" placeholder="Password"><br>
+        <button onclick="signup()">Signup</button>
+        <button onclick="login()">Login</button>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="dashboard">
+
+        <div class="top-bar">
+            <h1>💸 Expense Tracker</h1>
+            <div>
+                <span id="profile"></span>
+                <button onclick="logout()">Logout</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <input id="category" placeholder="📂 Category">
+            <input id="amount" type="number" placeholder="💰 Amount">
+            <input id="date" type="date">
+            <button onclick="addExpense()">➕ Add</button>
+        </div>
+
+        <div class="card">
+            <input id="search" placeholder="🔍 Search..." onkeyup="searchExpense()">
+            <input id="budget" type="number" placeholder="Set Monthly Budget">
+            <button onclick="setBudget()">Set Budget</button>
+            <h3 id="result"></h3>
+        </div>
+
+        <!-- Chart -->
+        <div class="card">
+            <canvas id="chart"></canvas>
+        </div>
+
+        <!-- Table -->
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Category</th>
+                        <th>Amount</th>
+                        <th>Date</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+let expenses = [];
+let currentUser = null;
+let budget = 0;
+let chart;
+
+// ===== USERS =====
+function getUsers() {
+    return JSON.parse(localStorage.getItem("users")) || [];
 }
 
-// ================= MAIN =================
-int main() {
-    if (login()) {
-        menu();
-    } else {
-        printf("Program terminated.\n");
+function saveUsers(users) {
+    localStorage.setItem("users", JSON.stringify(users));
+}
+
+// ===== AUTH =====
+function signup() {
+    let user = document.getElementById("user").value;
+    let email = document.getElementById("email").value.toLowerCase();
+    let pass = document.getElementById("pass").value;
+
+    if (!user || !email || !pass) return alert("Fill all fields");
+
+    let users = getUsers();
+    if (users.find(u => u.email === email)) return alert("User exists");
+
+    users.push({ user, email, pass });
+    saveUsers(users);
+
+    currentUser = email;
+    startApp(user);
+}
+
+function login() {
+    let email = document.getElementById("email").value.toLowerCase();
+    let pass = document.getElementById("pass").value;
+
+    let users = getUsers();
+    let u = users.find(x => x.email === email && x.pass === pass);
+
+    if (!u) return alert("Invalid login");
+
+    currentUser = email;
+    startApp(u.user);
+}
+
+function startApp(username) {
+    document.getElementById("auth").style.display = "none";
+    document.getElementById("dashboard").style.display = "block";
+    document.getElementById("profile").innerText = "👤 " + username;
+
+    loadData();
+}
+
+// ===== LOGOUT =====
+function logout() {
+    location.reload();
+}
+
+// ===== DATA =====
+function loadData() {
+    expenses = JSON.parse(localStorage.getItem(currentUser)) || [];
+    display(expenses);
+    updateChart();
+}
+
+function saveData() {
+    localStorage.setItem(currentUser, JSON.stringify(expenses));
+}
+
+// ===== ADD =====
+function addExpense() {
+    let cat = document.getElementById("category").value;
+    let amt = parseFloat(document.getElementById("amount").value);
+    let date = document.getElementById("date").value;
+
+    if (!cat || amt <= 0 || !date) return alert("Invalid");
+
+    expenses.push({ id: Date.now(), category: cat, amount: amt, date });
+    saveData();
+    display(expenses);
+    updateChart();
+    checkBudget();
+}
+
+// ===== DISPLAY =====
+function display(data) {
+    let tbody = document.getElementById("tableBody");
+    tbody.innerHTML = "";
+
+    data.forEach((e, i) => {
+        tbody.innerHTML += `
+        <tr>
+            <td>${e.id}</td>
+            <td>${e.category}</td>
+            <td>${e.amount}</td>
+            <td>${e.date}</td>
+            <td>
+                <button onclick="editExpense(${i})">✏️</button>
+                <button onclick="deleteExpense(${i})">🗑</button>
+            </td>
+        </tr>`;
+    });
+}
+
+// ===== EDIT =====
+function editExpense(i) {
+    let newAmt = prompt("New Amount:", expenses[i].amount);
+    if (newAmt) {
+        expenses[i].amount = parseFloat(newAmt);
+        saveData();
+        display(expenses);
+        updateChart();
     }
-
-    free(expenses);
-    return 0;
 }
+
+// ===== DELETE =====
+function deleteExpense(i) {
+    expenses.splice(i,1);
+    saveData();
+    display(expenses);
+    updateChart();
+}
+
+// ===== SEARCH =====
+function searchExpense() {
+    let q = document.getElementById("search").value.toLowerCase();
+    display(expenses.filter(e => e.category.toLowerCase().includes(q)));
+}
+
+// ===== BUDGET =====
+function setBudget() {
+    budget = parseFloat(document.getElementById("budget").value);
+}
+
+function checkBudget() {
+    let total = expenses.reduce((s,e)=>s+e.amount,0);
+    if (budget && total > budget) {
+        document.getElementById("result").innerText = "⚠ Budget exceeded!";
+    }
+}
+
+// ===== CHART =====
+function updateChart() {
+    let data = {};
+
+    expenses.forEach(e => {
+        data[e.category] = (data[e.category] || 0) + e.amount;
+    });
+
+    let labels = Object.keys(data);
+    let values = Object.values(data);
+
+    if (chart) chart.destroy();
+
+    chart = new Chart(document.getElementById("chart"), {
+        type: 'pie',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: values
+            }]
+        }
+    });
+}
+
+</script>
+
+</body>
+</html>
